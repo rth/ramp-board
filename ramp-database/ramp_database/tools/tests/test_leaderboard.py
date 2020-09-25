@@ -40,7 +40,7 @@ def session_toy_db(database_connection):
 
 
 @pytest.fixture
-def session_toy_function():
+def session_toy_function(database_connection):
     database_config = read_config(database_config_template())
     ramp_config = ramp_config_template()
     try:
@@ -196,7 +196,8 @@ def test_get_leaderboard(session_toy_db):
         assert private_term in leaderboard_private
 
     # check the column name in each leaderboard
-    assert """<th>team</th>
+    assert """<th>submission ID</th>
+      <th>team</th>
       <th>submission</th>
       <th>bagged test acc</th>
       <th>mean test acc</th>
@@ -226,6 +227,7 @@ def test_get_leaderboard(session_toy_db):
       <th>historical contributivity</th>
       <th>train time [s]</th>
       <th>valid time [s]</th>
+      <th>validation time [s]</th>
       <th>test time [s]</th>
       <th>max RAM [MB]</th>
       <th>submitted at (UTC)</th>""" in leaderboard_private
@@ -235,10 +237,8 @@ def test_get_leaderboard(session_toy_db):
       <th>error</th>
       <th>nll</th>
       <th>f1_70</th>
-      <th>contributivity</th>
-      <th>historical contributivity</th>
       <th>train time [s]</th>
-      <th>valid time [s]</th>
+      <th>validation time [s]</th>
       <th>max RAM [MB]</th>
       <th>submitted at (UTC)</th>""" in leaderboard_public
     assert """<th>team</th>
@@ -252,7 +252,7 @@ def test_get_leaderboard(session_toy_db):
       <th>submission</th>
       <th>acc</th>
       <th>train time [s]</th>
-      <th>valid time [s]</th>
+      <th>validation time [s]</th>
       <th>submitted at (UTC)</th>""" in competition_public
     assert """<th>rank</th>
       <th>move</th>
@@ -260,5 +260,6 @@ def test_get_leaderboard(session_toy_db):
       <th>submission</th>
       <th>acc</th>
       <th>train time [s]</th>
-      <th>valid time [s]</th>
+      <th>validation time [s]</th>
+      <th>test time [s]</th>
       <th>submitted at (UTC)</th>""" in competition_private
