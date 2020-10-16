@@ -639,7 +639,8 @@ class SubmissionFile(Model):
 
     @property
     def is_editable(self):
-        """bool: Whether the submission file is from an editable format."""
+        """bool: Whether the submission file is from an editable format on the
+        frontend."""
         return self.workflow_element.is_editable
 
     @property
@@ -692,7 +693,6 @@ class SubmissionFile(Model):
         code : str
             The code to write into the submission file.
         """
-        code.encode('ascii')  # to raise an exception if code is not ascii
         with open(self.path, 'w') as f:
             f.write(code)
 
@@ -754,7 +754,7 @@ class SubmissionFileType(Model):
     name : str
         The name of the submission file type.
     is_editable : bool
-        Whether or not this type of file is editable.
+        Whether or not this type of file is editable on the frontend.
     max_size : int
         The maximum size of this file type.
     workflow_element_types : list of \
@@ -993,14 +993,14 @@ class SubmissionOnCVFold(Model):
         """:class:`rampwf.prediction_types.Predictions`: Training
         predictions."""
         return self.submission.Predictions(
-            y_pred=self.full_train_y_pred[self.cv_fold.train_is])
+            y_pred=self.full_train_y_pred, fold_is=self.cv_fold.train_is)
 
     @property
     def valid_predictions(self):
         """:class:`rampwf.prediction_types.Predictions`: Validation
         predictions."""
         return self.submission.Predictions(
-            y_pred=self.full_train_y_pred[self.cv_fold.test_is])
+            y_pred=self.full_train_y_pred, fold_is=self.cv_fold.test_is)
 
     @property
     def test_predictions(self):
@@ -1057,13 +1057,13 @@ class SubmissionOnCVFold(Model):
     def compute_train_scores(self):
         """Compute all training scores."""
         if self.is_trained:
-            true_full_train_predictions = \
-                self.submission.event.problem.ground_truths_train()
+            true_train_predictions = \
+                self.submission.event.problem.ground_truths_train(
+                    self.cv_fold.train_is)
             for score in self.scores:
                 score.train_score = float(score.score_function(
-                    true_full_train_predictions,
-                    self.full_train_predictions,
-                    self.cv_fold.train_is))
+                    true_train_predictions,
+                    self.train_predictions))
         else:
             for score in self.scores:
                 score.train_score = score.event_score_type.worst
@@ -1071,13 +1071,13 @@ class SubmissionOnCVFold(Model):
     def compute_valid_scores(self):
         """Compute all validating scores."""
         if self.is_validated:
-            true_full_train_predictions = \
-                self.submission.event.problem.ground_truths_train()
+            true_valid_predictions = \
+                self.submission.event.problem.ground_truths_train(
+                    self.cv_fold.test_is)
             for score in self.scores:
                 score.valid_score = float(score.score_function(
-                    true_full_train_predictions,
-                    self.full_train_predictions,
-                    self.cv_fold.test_is))
+                    true_valid_predictions,
+                    self.valid_predictions))
         else:
             for score in self.scores:
                 score.valid_score = score.event_score_type.worst

@@ -7,7 +7,7 @@ from ramp_utils.testing import database_config_template
 from ramp_utils.testing import ramp_config_template
 
 from rampwf.prediction_types.base import BasePrediction
-from rampwf.workflows.classifier import Classifier
+from rampwf.workflows import Estimator
 
 from ramp_database.model import Event
 from ramp_database.model import Model
@@ -38,8 +38,8 @@ def test_problem_model(session_scope_module):
     problem = get_problem(session_scope_module, 'iris')
 
     assert (repr(problem) ==
-            "Problem({})\nWorkflow(Classifier)\n\tWorkflow(Classifier): "
-            "WorkflowElement(classifier)".format('iris'))
+            "Problem({})\nWorkflow(Estimator)\n\tWorkflow(Estimator): "
+            "WorkflowElement(estimator)".format('iris'))
 
     # check that we can access the problem module and that we have one of the
     # expected function there.
@@ -53,17 +53,14 @@ def test_problem_model(session_scope_module):
     X_test, y_test = problem.get_test_data()
     assert X_test.shape == (30, 4)
     assert y_test.shape == (30,)
-    gt_train = problem.ground_truths_train()
-    assert hasattr(gt_train, 'label_names')
-    assert gt_train.y_pred.shape == (120, 3)
     gt_test = problem.ground_truths_test()
     assert hasattr(gt_test, 'label_names')
     assert gt_test.y_pred.shape == (30, 3)
-    gt_valid = problem.ground_truths_valid([0, 1, 2])
+    gt_valid = problem.ground_truths_train(fold_is=[0, 1, 2])
     assert hasattr(gt_valid, 'label_names')
     assert gt_valid.y_pred.shape == (3, 3)
 
-    assert isinstance(problem.workflow_object, Classifier)
+    assert isinstance(problem.workflow_object, Estimator)
 
 
 @pytest.mark.parametrize(
